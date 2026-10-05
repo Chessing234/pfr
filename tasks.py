@@ -3,6 +3,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from invoke import run, task
+from invoke.exceptions import UnexpectedExit
 import json
 import re
 
@@ -33,8 +34,11 @@ def dev(ctx):
 
     def callback(changes):
         print('Changes detected:', changes)
-        bp(ctx)
-        web(ctx)
+        try:
+            bp(ctx)
+            web(ctx)
+        except UnexpectedExit as error:
+            print("Blueprint rebuild failed; waiting for another edit.\n", error)
 
     run_process(BP_DIR/'src', target='inv serve', callback=callback,
         watch_filter=DefaultFilter(
